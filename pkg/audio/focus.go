@@ -95,7 +95,7 @@ type FocusManager struct {
 
 func NewFocusManager() *FocusManager {
 	return &FocusManager{
-		gainBoost: 4.0,
+		gainBoost: 6.0,
 	}
 }
 
@@ -103,19 +103,20 @@ func (fm *FocusManager) ApplyFocus() float32 {
 	vol := float32(C.get_master_volume())
 	if vol > 0 {
 		fm.origVolume = vol
-		duckVolume := float32(0.20) // Duck background audio system-wide to 20%
+		duckVolume := float32(0.15) // Duck background audio system-wide to 15%
 
 		if vol > duckVolume {
-			fm.gainBoost = vol / duckVolume
+			// Calculate boosted gain ratio + 50% extra headroom boost for maximum clarity
+			fm.gainBoost = (vol / duckVolume) * 1.5
 			C.set_master_volume(C.float(duckVolume))
 		} else {
-			fm.gainBoost = 1.0
+			fm.gainBoost = 2.5
 		}
 
 		fm.isFocused = true
 		return fm.gainBoost
 	}
-	return 4.0
+	return 6.0
 }
 
 func (fm *FocusManager) Restore() {
@@ -130,7 +131,7 @@ func (fm *FocusManager) Restore() {
 
 func (fm *FocusManager) GetGainBoost() float32 {
 	if fm.gainBoost <= 0 {
-		return 4.0
+		return 6.0
 	}
 	return fm.gainBoost
 }
