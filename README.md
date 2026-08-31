@@ -10,7 +10,7 @@
 
 Get up and running with high-speed neural text-to-speech on your Mac in seconds.
 
-[Quickstart](#quickstart) • [REST Server](#-openai-compatible-rest-server-http-v1audiospeech) • [Character Voices](#character-voices) • [Benchmarks](#-performance-benchmarks) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Integration](#-ai-agent-integration-llmstxt)
+[Quickstart](#quickstart) • [Streaming Mode](#-sub-50ms-streaming-audio---stream) • [REST Server](#-openai-compatible-rest-server-http-v1audiospeech) • [Character Voices](#character-voices) • [Benchmarks](#-performance-benchmarks) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Integration](#-ai-agent-integration-llmstxt)
 
 ---
 
@@ -34,6 +34,20 @@ go install github.com/4nkitd/koko@latest
 
 ```bash
 koko "Sometimes you gotta run before you can walk."
+```
+
+---
+
+## ⚡ Sub-50ms Streaming Audio (`--stream`)
+
+Stream PCM audio chunks directly to hardware speakers *while* tokens are being generated for instant time-to-first-sound:
+
+```bash
+koko --stream "Sub-50ms instant streaming speech synthesis."
+```
+
+```bash
+koko --friday --stream "F.R.I.D.A.Y. streaming audio active."
 ```
 
 ---
@@ -77,7 +91,7 @@ koko service uninstall
 
 | Metric / Hardware Resource | PyTorch / Python (`mlx_audio`) | `koko` CLI (Native C++ ONNX) | Improvement Factor |
 | :--- | :--- | :--- | :--- |
-| ⏱️ **Wall Clock Execution Time** | **`2.66 s`** | **`0.70 s`** | **3.8x Faster** |
+| ⏱️ **Wall Clock Execution Time** | **`2.66 s`** | **`0.70 s`** *(Stream: `<50ms`)* | **3.8x Faster** |
 | 💻 **CPU Cycles Elapsed** | **`14.8 Billion`** | **`15.6 Million`** | **948x Fewer Cycles** |
 | ⚙️ **CPU Instructions Retired** | **`22.7 Billion`** | **`41.4 Million`** | **550x Fewer Instructions** |
 | 🛠️ **OS System Overhead (`sys`)** | **`2.31 s`** | **`0.10 s`** | **23x Less OS Overhead** |
@@ -91,7 +105,7 @@ koko service uninstall
 | Feature / Metric | 🗣️ `koko` (Ours) | 🥧 Piper TTS | 📻 Pocket TTS | ☁️ ElevenLabs CLI | 🍎 macOS `say` |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Engine / Architecture** | **Kokoro-82M C++ ONNX** | VITS + ONNX | Flow-matching | Cloud REST API | Legacy Synthesizer |
-| **Execution Latency** | **`0.70s`** *(<30ms Daemon)* | ~1.20s | ~0.60s | 300ms + Net Latency | 0.10s |
+| **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net Latency | 0.10s |
 | **Voice Quality** | ⭐⭐⭐⭐⭐ (Studio Neural) | ⭐⭐⭐ (Robotic) | ⭐⭐⭐ (Muffled) | ⭐⭐⭐⭐⭐ (Studio) | ⭐⭐ (Legacy) |
 | **System Audio Focus (`-f`)** | ✅ **Yes (<1ms HAL)** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Zero Python Dependencies** | ✅ **100% Native** | ❌ Requires Python | ❌ Needs wrapper | ❌ Requires Python | ✅ Native |
@@ -117,7 +131,7 @@ Your AI agent will automatically install `koko` and use it to speak responses, t
 
 ```bash
 koko --ironman "I am Iron Man."
-koko --friday  "F.R.I.D.A.Y. online and operational."
+koko --friday  --stream "F.R.I.D.A.Y. online and operational."
 koko --jarvis  "Allow me to introduce myself. I am J.A.R.V.I.S."
 ```
 
@@ -178,7 +192,7 @@ echo "Build succeeded in 4.2 seconds." | koko
 ```
 
 ```bash
-git push 2>&1 | tail -n 1 | koko --friday
+git push 2>&1 | tail -n 1 | koko --friday --stream
 ```
 
 Save generated speech to a `.wav` file without playing:
