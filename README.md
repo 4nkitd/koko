@@ -10,7 +10,7 @@
 
 Get up and running with high-speed neural text-to-speech on your Mac in seconds.
 
-[Quickstart](#quickstart) • [Streaming Mode](#-sub-50ms-streaming-audio---stream) • [REST Server](#-openai-compatible-rest-server-http-v1audiospeech) • [Character Voices](#character-voices) • [Benchmarks](#-performance-benchmarks) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Integration](#-ai-agent-integration-llmstxt)
+[Quickstart](#quickstart) • [Streaming Mode](#-sub-50ms-streaming-audio---stream) • [Device Routing](#-audio-device-routing--d---device) • [REST Server](#-openai-compatible-rest-server-http-v1audiospeech) • [Character Voices](#character-voices) • [Benchmarks](#-performance-benchmarks) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Integration](#-ai-agent-integration-llmstxt)
 
 ---
 
@@ -38,6 +38,22 @@ koko "Sometimes you gotta run before you can walk."
 
 ---
 
+## 🎧 Audio Device Routing (`-d` / `--device`)
+
+Route playback to any specific output speaker, Bluetooth headphones, AirPods, or external display:
+
+```bash
+# Target specific audio device by name or substring
+koko -d "AirPods" "Speech routed to Bluetooth headphones."
+koko -d "MacBook Pro Speakers" "Speech routed to built-in speakers."
+koko -d "DELL" "Speech routed to external monitor audio."
+
+# List all available audio output devices
+koko --list-devices
+```
+
+---
+
 ## ⚡ Sub-50ms Streaming Audio (`--stream`)
 
 Stream PCM audio chunks directly to hardware speakers *while* tokens are being generated for **almost instant** time-to-first-sound:
@@ -48,6 +64,39 @@ koko --stream "Sub-50ms instant streaming speech synthesis."
 
 ```bash
 koko --friday --stream "F.R.I.D.A.Y. streaming audio active."
+```
+
+---
+
+## 🔌 OpenAI-Compatible REST Server (`http://v1/audio/speech`)
+
+Launch `koko` as a local OpenAI-compatible HTTP REST server:
+
+```bash
+koko server --port 8848
+```
+
+Any app, web frontend, VS Code extension, or script designed for OpenAI TTS can stream audio locally with zero code changes:
+
+```bash
+curl -X POST http://localhost:8848/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{"input": "OpenAI API compatibility test passed.", "voice": "ironman"}' \
+  --output response.wav
+```
+
+---
+
+## 🚦 macOS Auto-Starting Service (`koko service install`)
+
+Automatically register `koko daemon` as a native macOS LaunchAgent service so it stays pre-warmed on system login:
+
+```bash
+# Install & load LaunchAgent service
+koko service install
+
+# Uninstall service
+koko service uninstall
 ```
 
 ---
@@ -86,41 +135,9 @@ koko --friday --stream "F.R.I.D.A.Y. streaming audio active."
 | **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net Latency | 0.10s |
 | **Voice Quality** | ⭐⭐⭐⭐⭐ (Studio Neural) | ⭐⭐⭐ (Robotic) | ⭐⭐⭐ (Muffled) | ⭐⭐⭐⭐⭐ (Studio) | ⭐⭐ (Legacy) |
 | **System Audio Focus (`-f`)** | ✅ **Yes (<1ms HAL)** | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Device Selection (`-d`)** | ✅ **Native CoreAudio** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Zero Python Dependencies** | ✅ **100% Native** | ❌ Requires Python | ❌ Needs wrapper | ❌ Requires Python | ✅ Native |
 | **Licensing** | **MIT License** | ⚠️ GPL-3.0 | MIT License | 💳 Paid Subscription | Closed / Native |
-
----
-
-## 🔌 OpenAI-Compatible REST Server (`http://v1/audio/speech`)
-
-Launch `koko` as a local OpenAI-compatible HTTP REST server:
-
-```bash
-koko server --port 8848
-```
-
-Any app, web frontend, VS Code extension, or script designed for OpenAI TTS can stream audio locally with zero code changes:
-
-```bash
-curl -X POST http://localhost:8848/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -d '{"input": "OpenAI API compatibility test passed.", "voice": "ironman"}' \
-  --output response.wav
-```
-
----
-
-## 🚦 macOS Auto-Starting Service (`koko service install`)
-
-Automatically register `koko daemon` as a native macOS LaunchAgent service so it stays pre-warmed on system login:
-
-```bash
-# Install & load LaunchAgent service
-koko service install
-
-# Uninstall service
-koko service uninstall
-```
 
 ---
 
@@ -218,7 +235,7 @@ koko -o output.wav --no-play "Saving audio output directly to file."
 
 - **Zero Python Dependencies**: 100% compiled standalone Go binary with native C++ SIMD inference (`sherpa-onnx`). No virtual environments, PyTorch, or Hugging Face Hub runtime needed.
 - **Model Backbone**: **Kokoro-82M** (StyleTTS 2 architecture) exported to ONNX (~345MB).
-- **CoreAudio HAL**: Direct Cgo linking against Apple's `-framework CoreAudio` for hardware-level volume scalar manipulation.
+- **CoreAudio HAL**: Direct Cgo linking against Apple's `-framework CoreAudio` for hardware-level volume scalar manipulation and audio output device targeting.
 - **Auto-Setup**: Missing model files are self-provisioned automatically on turn 1.
 
 ---

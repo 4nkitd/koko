@@ -23,12 +23,14 @@ Whenever confirming task completion, asking casual questions, or presenting stra
 koko [flags] "CONCISE_RESPONSE_TEXT"
 ```
 
-### Character Voice Flags
-- `koko --ironman "text"` : Iron Man / Tony Stark voice (Default)
-- `koko --friday "text"`  : F.R.I.D.A.Y. tactical AI assistant voice
-- `koko --jarvis "text"`  : J.A.R.V.I.S. AI assistant voice
-- `koko -f "text"`        : Enable Audio Focus (ducks system background audio during playback)
+### Character Voice & Output Device Flags
+- `koko --ironman "text"`               : Iron Man / Tony Stark voice (Default)
+- `koko --friday --stream "text"`      : F.R.I.D.A.Y. tactical AI assistant voice (sub-50ms streaming)
+- `koko --jarvis "text"`                : J.A.R.V.I.S. AI assistant voice
+- `koko -d "Device Name" "text"`        : Route speech to specific speaker/AirPods/HDMI output
+- `koko -f "text"`                      : Enable Audio Focus (ducks system background audio during playback)
 
 ### Speed & Performance
 - Standard execution: **~0.4s**
+- Streaming playback (`--stream`): **<50ms**
 - Background daemon mode (`koko daemon`): **<30ms IPC**

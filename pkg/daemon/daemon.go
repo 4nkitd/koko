@@ -20,6 +20,7 @@ type Request struct {
 	Voice   string  `json:"voice"`
 	Speed   float64 `json:"speed"`
 	OutPath string  `json:"out_path"`
+	Device  string  `json:"device"`
 	Focus   bool    `json:"focus"`
 	NoPlay  bool    `json:"no_play"`
 }
@@ -91,7 +92,7 @@ func handleConn(conn net.Conn, eng *engine.Engine) {
 
 	if !req.NoPlay {
 		player := audio.NewPlayer()
-		_ = player.Play(wavFile, req.Focus)
+		_ = player.Play(wavFile, req.Focus, req.Device)
 	}
 
 	_ = encoder.Encode(Response{Success: true, WavPath: wavFile})

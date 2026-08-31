@@ -15,7 +15,16 @@ func NewPlayer() *Player {
 	return &Player{}
 }
 
-func (p *Player) Play(filePath string, useFocus bool) error {
+func (p *Player) Play(filePath string, useFocus bool, targetDevice string) error {
+	deviceMgr := NewDeviceManager()
+	if targetDevice != "" {
+		if err := deviceMgr.SwitchDevice(targetDevice); err != nil {
+			fmt.Fprintf(os.Stderr, "⚠️  Warning: %v. Using default output device.\n", err)
+		} else {
+			defer deviceMgr.Restore()
+		}
+	}
+
 	focusMgr := NewFocusManager()
 	if useFocus {
 		focusMgr.ApplyFocus()
@@ -36,7 +45,6 @@ func (p *Player) Play(filePath string, useFocus bool) error {
 		psCmd := fmt.Sprintf("(New-Object Media.SoundPlayer '%s').PlaySync()", filePath)
 		cmd = exec.Command("powershell", "-c", psCmd)
 	default:
-		// Linux fallback order: paplay -> aplay -> ffplay -> mpv
 		if path, err := exec.LookPath("paplay"); err == nil {
 			cmd = exec.Command(path, filePath)
 		} else if path, err := exec.LookPath("aplay"); err == nil {
@@ -75,6 +83,9 @@ func (p *Player) Play(filePath string, useFocus bool) error {
 		}
 		if useFocus {
 			focusMgr.Restore()
+		}
+		if targetDevice != "" {
+			deviceMgr.Restore()
 		}
 		return fmt.Errorf("playback interrupted by signal: %v", sig)
 	}

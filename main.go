@@ -24,6 +24,9 @@ func main() {
 	voiceFlag := flag.String("voice", "", "Character voice: 'ironman', 'friday', 'jarvis', etc.")
 	flag.StringVar(voiceFlag, "v", "", "Character voice (shorthand)")
 
+	deviceFlag := flag.String("device", "", "Target audio output device name (e.g. 'MacBook Pro Speakers', 'AirPods')")
+	flag.StringVar(deviceFlag, "d", "", "Target audio output device (shorthand)")
+
 	ironmanFlag := flag.Bool("ironman", false, "Speak using Iron Man / Tony Stark voice")
 	starkFlag := flag.Bool("stark", false, "Speak using Iron Man / Tony Stark voice")
 	fridayFlag := flag.Bool("friday", false, "Speak using F.R.I.D.A.Y. voice")
@@ -46,6 +49,7 @@ func main() {
 	daemonFlag := flag.Bool("daemon", false, "Start background daemon server for sub-30ms IPC execution")
 	listVoicesFlag := flag.Bool("list-voices", false, "List available character voices")
 	flag.BoolVar(listVoicesFlag, "l", false, "List available voices (shorthand)")
+	listDevicesFlag := flag.Bool("list-devices", false, "List active macOS audio output devices")
 
 	configFlag := flag.String("config", "", "Custom path to config.json")
 	verboseFlag := flag.Bool("verbose", false, "Enable verbose debug output")
@@ -62,6 +66,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  koko setup                  Initialize ONNX models and runtime\n\n")
 		fmt.Fprintf(os.Stderr, "Examples:\n")
 		fmt.Fprintf(os.Stderr, "  koko \"I am Iron Man.\"\n")
+		fmt.Fprintf(os.Stderr, "  koko -d \"MacBook Pro Speakers\" \"Output routed to specific speaker.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --stream \"Sub-50ms instant streaming speech synthesis.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --ironman \"Sometimes you gotta run before you can walk.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --friday \"F.R.I.D.A.Y. online.\"\n")
@@ -140,6 +145,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *listDevicesFlag {
+		audio.ListDevices()
+		os.Exit(0)
+	}
+
 	selectedVoice := *voiceFlag
 	if *ironmanFlag || *starkFlag {
 		selectedVoice = "ironman"
@@ -181,13 +191,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Try sub-30ms daemon IPC execution if running (unless --stream is passed)
 	if !*streamFlag {
 		daemonReq := daemon.Request{
 			Text:    text,
 			Voice:   selectedVoice,
 			Speed:   *speedFlag,
 			OutPath: *outFlag,
+			Device:  *deviceFlag,
 			Focus:   *focusFlag,
 			NoPlay:  *noPlayFlag,
 		}
@@ -227,7 +237,7 @@ func main() {
 		shouldPlay := !*noPlayFlag
 		if shouldPlay {
 			player := audio.NewPlayer()
-			if err := player.Play(wavFile, *focusFlag); err != nil {
+			if err := player.Play(wavFile, *focusFlag, *deviceFlag); err != nil {
 				fmt.Fprintf(os.Stderr, "Audio playback error: %v\n", err)
 			}
 		}
