@@ -87,29 +87,12 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 	tokensPath := filepath.Join(modelDir, "tokens.txt")
 	dataDir := filepath.Join(modelDir, "espeak-ng-data")
 
-	executable, errLoc := locateSherpaBinary(opts.Stream)
+	executable, errLoc := locateSherpaBinary(false)
 	_, errStat := os.Stat(modelPath)
 
 	if errLoc != nil || errStat != nil {
 		fmt.Fprintf(os.Stderr, "⚠️  Warning: Native ONNX engine/models unavailable. Falling back to macOS speech engine.\n")
 		return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
-	}
-
-	// If streaming with Audio Focus enabled, duck background audio system-wide
-	if opts.Stream && opts.Focus {
-		focusMgr := audio.NewFocusManager()
-		focusMgr.ApplyFocus()
-		defer focusMgr.Restore()
-	}
-
-	// If streaming with specific audio output device, switch default device first
-	if opts.Stream && opts.Device != "" {
-		devMgr := audio.NewDeviceManager()
-		if err := devMgr.SwitchDevice(opts.Device); err != nil {
-			fmt.Fprintf(os.Stderr, "⚠️  Warning: %v. Using default output device.\n", err)
-		} else {
-			defer devMgr.Restore()
-		}
 	}
 
 	outDir := os.TempDir()
@@ -131,36 +114,38 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 		"--kokoro-tokens=" + tokensPath,
 		"--kokoro-data-dir=" + dataDir,
 		"--sid=" + strconv.Itoa(sid),
+		"--output-filename=" + targetWav,
+		opts.Text,
 	}
-
-	if !opts.Stream {
-		args = append(args, "--output-filename="+targetWav)
-	}
-
-	args = append(args, opts.Text)
 
 	cmd := exec.Command(executable, args...)
 	cmd.Env = os.Environ()
 
-	if opts.Verbose || opts.Stream {
+	if opts.Verbose {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
 
 	if err := cmd.Run(); err != nil {
-		if !opts.Stream {
-			fmt.Fprintf(os.Stderr, "⚠️  Warning: Native C++ TTS execution error: %v. Falling back to macOS speech engine.\n", err)
-			return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
-		}
-		return "", err
-	}
-
-	if opts.Stream {
-		return "", nil
+		fmt.Fprintf(os.Stderr, "⚠️  Warning: Native C++ TTS execution error: %v. Falling back to macOS speech engine.\n", err)
+		return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
 	}
 
 	if _, err := os.Stat(targetWav); err != nil {
 		return "", fmt.Errorf("generated WAV not found at %s: %w", targetWav, err)
+	}
+
+	// Handle streaming mode with PCM sample gain multiplication & audio device routing
+	if opts.Stream {
+		samples, sampleRate, errRead := audio.ReadWavPCM(targetWav)
+		if errRead == nil && len(samples) > 0 {
+			streamPlayer := audio.NewStreamPlayer()
+			_ = streamPlayer.PlayPCM(samples, sampleRate, opts.Focus, opts.Device)
+			if opts.OutPath == "" {
+				audio.Cleanup(targetWav)
+			}
+			return targetWav, nil
+		}
 	}
 
 	return targetWav, nil
