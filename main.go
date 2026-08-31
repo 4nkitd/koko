@@ -223,6 +223,7 @@ func main() {
 		Speed:   *speedFlag,
 		OutPath: *outFlag,
 		Device:  *deviceFlag,
+		Focus:   *focusFlag,
 		Stream:  *streamFlag,
 		Verbose: *verboseFlag,
 	}

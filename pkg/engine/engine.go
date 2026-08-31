@@ -22,6 +22,7 @@ type SynthesizeOptions struct {
 	OutPath string
 	Model   string
 	Device  string
+	Focus   bool
 	Stream  bool
 	Verbose bool
 }
@@ -92,6 +93,13 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 	if errLoc != nil || errStat != nil {
 		fmt.Fprintf(os.Stderr, "⚠️  Warning: Native ONNX engine/models unavailable. Falling back to macOS speech engine.\n")
 		return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
+	}
+
+	// If streaming with Audio Focus enabled, duck background audio system-wide
+	if opts.Stream && opts.Focus {
+		focusMgr := audio.NewFocusManager()
+		focusMgr.ApplyFocus()
+		defer focusMgr.Restore()
 	}
 
 	// If streaming with specific audio output device, switch default device first
