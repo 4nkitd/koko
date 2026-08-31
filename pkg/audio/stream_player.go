@@ -9,7 +9,6 @@ package audio
 #include <CoreAudio/CoreAudio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 typedef struct {
     AudioQueueRef queue;
@@ -33,9 +32,9 @@ static void stream_audio_callback(void *userData, AudioQueueRef inAQ, AudioQueue
 
     if (numToCopy > 0) {
         for (int i = 0; i < numToCopy; i++) {
-            float rawSample = state->pcm_samples[state->current_sample + i] * state->gain;
-            // Soft-saturation curve (tanh) for maximum loudness without clipping distortion
-            float sample = tanhf(rawSample);
+            float sample = state->pcm_samples[state->current_sample + i] * state->gain;
+            if (sample > 1.0f) sample = 1.0f;
+            if (sample < -1.0f) sample = -1.0f;
             outBuffer[i] = sample;
         }
         state->current_sample += numToCopy;

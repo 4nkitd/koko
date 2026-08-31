@@ -89,17 +89,15 @@ curl -X POST http://localhost:8848/v1/audio/speech \
 
 ---
 
-## 🚦 macOS Auto-Starting Service (`koko service install`)
+## 🎯 Audio Focus (`-f` / `--focus`)
 
-Automatically register `koko daemon` as a native macOS LaunchAgent service so it stays pre-warmed on system login:
+Ducks active background media applications (Spotify, Apple Music, VLC, QuickTime, TV, Podcasts) to **<10% volume** during speech playback, while keeping macOS System Master Volume **100% untouched** so `koko` is heard at full, clear volume.
 
 ```bash
-# Install & load LaunchAgent service
-koko service install
-
-# Uninstall service
-koko service uninstall
+koko -f "Priority notification. Media apps ducked to 10%."
 ```
+
+> **How it works**: System Master Volume is never touched. `koko` lowers active media players directly during playback and automatically restores original app volumes when speech finishes.
 
 ---
 
@@ -136,7 +134,7 @@ koko service uninstall
 | **Engine Architecture** | **Kokoro-82M C++ ONNX** | VITS + ONNX | Flow-matching | Cloud API | Legacy Synthesizer |
 | **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net | 0.10s |
 | **Voice Quality** | ⭐⭐⭐⭐⭐ (Studio Neural) | ⭐⭐⭐ (Robotic) | ⭐⭐⭐ (Muffled) | ⭐⭐⭐⭐⭐ (Studio) | ⭐⭐ (Legacy) |
-| **System Audio Focus (`-f`)** | ✅ **Yes (<1ms HAL)** | ❌ No | ❌ No | ❌ No | ❌ No |
+| **App Audio Focus (`-f`)** | ✅ **Yes (Media Apps <10%)** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Device Selection (`-d`)** | ✅ **Native CoreAudio ID** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Zero Python Dependencies** | ✅ **100% Native** | ❌ Requires Python | ❌ Needs wrapper | ❌ Requires Python | ✅ Native |
 | **License** | **MIT License** | ⚠️ GPL-3.0 | MIT License | 💳 Paid | Closed / Native |
@@ -183,18 +181,6 @@ koko --list-voices
 
 ---
 
-## Audio Focus (`-f` / `--focus`)
-
-Ducks background audio (music, YouTube, video games, browser tabs, media players) system-wide using native macOS CoreAudio HAL APIs in **<1ms**, speaks your text loudly and clearly, then automatically restores your original volume levels.
-
-```bash
-koko -f "Priority notification. All background audio ducked."
-```
-
-> **How it works**: Unlike fragile script-based implementations, `koko` uses zero application-specific hacks. It operates directly at the macOS CoreAudio hardware layer (`AudioObjectSetPropertyData`), attenuating all active audio outputs across the entire OS during speech playback.
-
----
-
 ## Daemon Mode (`< 30ms` IPC Execution)
 
 For voice agents, terminal scripts, or IDE extensions requiring ultra-low latency playback, launch `koko` in background daemon mode:
@@ -237,7 +223,7 @@ koko -o output.wav --no-play "Saving audio output directly to file."
 
 - **Zero Python Dependencies**: 100% compiled standalone Go binary with native C++ SIMD inference (`sherpa-onnx`). No virtual environments, PyTorch, or Hugging Face Hub runtime needed.
 - **Model Backbone**: **Kokoro-82M** (StyleTTS 2 architecture) exported to ONNX (~345MB).
-- **CoreAudio HAL**: Direct Cgo linking against Apple's `-framework CoreAudio` for hardware-level volume scalar manipulation and audio output device targeting by Device ID.
+- **App Volume Focus**: App-level sound volume control for active media applications (Spotify, Apple Music, QuickTime, VLC, TV, Podcasts) lowering them to <10% while keeping macOS System Master Volume untouched.
 - **Auto-Setup**: Missing model files are self-provisioned automatically on turn 1.
 
 ---
