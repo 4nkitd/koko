@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"syscall"
 )
 
@@ -26,9 +27,10 @@ func (p *Player) Play(filePath string, useFocus bool, targetDevice string) error
 	}
 
 	focusMgr := NewFocusManager()
+	var gainBoost float32 = 1.0
 
 	if useFocus {
-		focusMgr.ApplyFocus()
+		gainBoost = focusMgr.ApplyFocus()
 		defer focusMgr.Restore()
 	}
 
@@ -36,8 +38,14 @@ func (p *Player) Play(filePath string, useFocus bool, targetDevice string) error
 
 	switch runtime.GOOS {
 	case "darwin":
-		// Native 1.0 full gain playback (System master volume remains 100% untouched)
-		cmd = exec.Command("afplay", filePath)
+		args := []string{}
+		if useFocus {
+			// Apply gain compensation factor (e.g. -v 2.0) so koko remains 100% full volume while background audio dips by ~12dB
+			gainStr := strconv.FormatFloat(float64(gainBoost), 'f', 2, 64)
+			args = append(args, "-v", gainStr)
+		}
+		args = append(args, filePath)
+		cmd = exec.Command("afplay", args...)
 	case "windows":
 		psCmd := fmt.Sprintf("(New-Object Media.SoundPlayer '%s').PlaySync()", filePath)
 		cmd = exec.Command("powershell", "-c", psCmd)
