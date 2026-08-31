@@ -222,6 +222,7 @@ func main() {
 		Voice:   selectedVoice,
 		Speed:   *speedFlag,
 		OutPath: *outFlag,
+		Device:  *deviceFlag,
 		Stream:  *streamFlag,
 		Verbose: *verboseFlag,
 	}

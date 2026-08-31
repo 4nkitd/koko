@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/4nkitd/koko/pkg/audio"
 	"github.com/4nkitd/koko/pkg/config"
 )
 
@@ -20,6 +21,7 @@ type SynthesizeOptions struct {
 	Speed   float64
 	OutPath string
 	Model   string
+	Device  string
 	Stream  bool
 	Verbose bool
 }
@@ -90,6 +92,16 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 	if errLoc != nil || errStat != nil {
 		fmt.Fprintf(os.Stderr, "⚠️  Warning: Native ONNX engine/models unavailable. Falling back to macOS speech engine.\n")
 		return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
+	}
+
+	// If streaming with specific audio output device, switch default device first
+	if opts.Stream && opts.Device != "" {
+		devMgr := audio.NewDeviceManager()
+		if err := devMgr.SwitchDevice(opts.Device); err != nil {
+			fmt.Fprintf(os.Stderr, "⚠️  Warning: %v. Using default output device.\n", err)
+		} else {
+			defer devMgr.Restore()
+		}
 	}
 
 	outDir := os.TempDir()
