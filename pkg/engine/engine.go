@@ -135,6 +135,9 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 		return "", fmt.Errorf("generated WAV not found at %s: %w", targetWav, err)
 	}
 
+	// Apply 0 dBFS Peak Normalization to double digital output volume & clarity
+	_ = audio.NormalizeWavFile(targetWav)
+
 	// Handle streaming mode with PCM sample gain multiplication & audio device routing
 	if opts.Stream {
 		samples, sampleRate, errRead := audio.ReadWavPCM(targetWav)
