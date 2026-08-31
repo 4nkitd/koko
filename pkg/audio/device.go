@@ -132,6 +132,7 @@ static void print_output_devices() {
     }
 
     free(deviceIDs);
+    fflush(stdout);
 }
 */
 import "C"
