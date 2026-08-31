@@ -89,28 +89,52 @@ import "C"
 
 type FocusManager struct {
 	origVolume float32
+	gainBoost  float32
 	isFocused  bool
 }
 
 func NewFocusManager() *FocusManager {
-	return &FocusManager{}
+	return &FocusManager{
+		gainBoost: 4.0,
+	}
 }
 
-func (fm *FocusManager) ApplyFocus() {
+func (fm *FocusManager) ApplyFocus() float32 {
 	vol := float32(C.get_master_volume())
-	if vol >= 0 {
+	if vol > 0 {
 		fm.origVolume = vol
-		C.set_master_volume(C.float(0.25))
+		duckVolume := float32(0.20) // Duck background audio system-wide to 20%
+
+		if vol > duckVolume {
+			fm.gainBoost = vol / duckVolume
+			C.set_master_volume(C.float(duckVolume))
+		} else {
+			fm.gainBoost = 1.0
+		}
+
 		fm.isFocused = true
+		return fm.gainBoost
 	}
+	return 4.0
 }
 
 func (fm *FocusManager) Restore() {
 	if !fm.isFocused {
 		return
 	}
-	if fm.origVolume >= 0 {
+	if fm.origVolume > 0 {
 		C.set_master_volume(C.float(fm.origVolume))
 	}
 	fm.isFocused = false
+}
+
+func (fm *FocusManager) GetGainBoost() float32 {
+	if fm.gainBoost <= 0 {
+		return 4.0
+	}
+	return fm.gainBoost
+}
+
+func GetCurrentMasterVolume() float32 {
+	return float32(C.get_master_volume())
 }
