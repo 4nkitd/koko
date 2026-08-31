@@ -1,0 +1,24 @@
+# Binaries & Executables
+tts
+*.exe
+*.exe.exe
+*.dll
+*.so
+*.dylib
+
+# Audio Output & Temporary Files
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.part
+*.tar.bz2
+/tmp/
+
+# IDE & OS Files
+.DS_Store
+.vscode/
+.idea/
+
+# Go Build Artifacts
+*.out
