@@ -95,7 +95,7 @@ type FocusManager struct {
 
 func NewFocusManager() *FocusManager {
 	return &FocusManager{
-		gainBoost: 2.5,
+		gainBoost: 4.0,
 	}
 }
 
@@ -103,24 +103,24 @@ func (fm *FocusManager) ApplyFocus() float32 {
 	vol := float32(C.get_master_volume())
 	if vol > 0 {
 		fm.origVolume = vol
-		// Duck master volume by 60% (e.g. 80% dips down to 32%) for background audio
-		duckVolume := vol * 0.40
-		if duckVolume < 0.25 {
-			duckVolume = 0.25
+		// Duck master volume by 75% (e.g. 80% dips down to 20%) for background audio
+		duckVolume := vol * 0.25
+		if duckVolume < 0.15 {
+			duckVolume = 0.15
 		}
 
 		if vol > duckVolume {
-			// 2.5x gain boost ensures koko remains 100% full volume over ducked background
+			// 4.0x gain boost ensures koko remains 100% full volume over ducked background
 			fm.gainBoost = vol / duckVolume
 			C.set_master_volume(C.float(duckVolume))
 		} else {
-			fm.gainBoost = 2.0
+			fm.gainBoost = 3.0
 		}
 
 		fm.isFocused = true
 		return fm.gainBoost
 	}
-	return 2.5
+	return 4.0
 }
 
 func (fm *FocusManager) Restore() {
@@ -135,7 +135,7 @@ func (fm *FocusManager) Restore() {
 
 func (fm *FocusManager) GetGainBoost() float32 {
 	if fm.gainBoost <= 0 {
-		return 2.5
+		return 4.0
 	}
 	return fm.gainBoost
 }
