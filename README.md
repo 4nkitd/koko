@@ -91,13 +91,13 @@ curl -X POST http://localhost:8848/v1/audio/speech \
 
 ## 🎯 Audio Focus (`-f` / `--focus`)
 
-Ducks active background media applications (Spotify, Apple Music, VLC, QuickTime, TV, Podcasts) to **<10% volume** during speech playback, while keeping macOS System Master Volume **100% untouched** so `koko` is heard at full, clear volume.
+Ducks active background media players (Spotify, Apple Music, VLC, QuickTime, TV, Podcasts) to **10% volume**, and web browser tabs (Chrome, Safari, Arc, Brave, Edge) to **15% volume** during speech playback, while keeping macOS System Master Volume **100% untouched** so `koko` plays at full, loud, un-throttled volume.
 
 ```bash
-koko -f "Priority notification. Media apps ducked to 10%."
+koko -f "Priority notification. Background app audio ducked."
 ```
 
-> **How it works**: System Master Volume is never touched. `koko` lowers active media players directly during playback and automatically restores original app volumes when speech finishes.
+> **How it works**: System Master Volume is never touched. `koko` attenuates active media app sound and browser tab media elements directly during playback, automatically restoring original levels when speech finishes.
 
 ---
 
@@ -134,7 +134,7 @@ koko -f "Priority notification. Media apps ducked to 10%."
 | **Engine Architecture** | **Kokoro-82M C++ ONNX** | VITS + ONNX | Flow-matching | Cloud API | Legacy Synthesizer |
 | **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net | 0.10s |
 | **Voice Quality** | ⭐⭐⭐⭐⭐ (Studio Neural) | ⭐⭐⭐ (Robotic) | ⭐⭐⭐ (Muffled) | ⭐⭐⭐⭐⭐ (Studio) | ⭐⭐ (Legacy) |
-| **App Audio Focus (`-f`)** | ✅ **Yes (Media Apps <10%)** | ❌ No | ❌ No | ❌ No | ❌ No |
+| **App Audio Focus (`-f`)** | ✅ **Yes (Media & Browsers <15%)** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Device Selection (`-d`)** | ✅ **Native CoreAudio ID** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Zero Python Dependencies** | ✅ **100% Native** | ❌ Requires Python | ❌ Needs wrapper | ❌ Requires Python | ✅ Native |
 | **License** | **MIT License** | ⚠️ GPL-3.0 | MIT License | 💳 Paid | Closed / Native |
@@ -223,7 +223,7 @@ koko -o output.wav --no-play "Saving audio output directly to file."
 
 - **Zero Python Dependencies**: 100% compiled standalone Go binary with native C++ SIMD inference (`sherpa-onnx`). No virtual environments, PyTorch, or Hugging Face Hub runtime needed.
 - **Model Backbone**: **Kokoro-82M** (StyleTTS 2 architecture) exported to ONNX (~345MB).
-- **App Volume Focus**: App-level sound volume control for active media applications (Spotify, Apple Music, QuickTime, VLC, TV, Podcasts) lowering them to <10% while keeping macOS System Master Volume untouched.
+- **App & Browser Audio Focus**: Sound volume control for active media applications (Spotify, Apple Music, QuickTime, VLC, TV, Podcasts) lowering them to 10%, and browser media tabs (Chrome, Safari, Arc, Brave, Edge) lowering them to 15%, while keeping macOS System Master Volume untouched.
 - **Auto-Setup**: Missing model files are self-provisioned automatically on turn 1.
 
 ---
