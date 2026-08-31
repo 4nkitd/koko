@@ -40,16 +40,18 @@ koko "Sometimes you gotta run before you can walk."
 
 ## 🎧 Audio Device Routing (`-d` / `--device`)
 
-Route playback to any specific output speaker, Bluetooth headphones, AirPods, or external display:
+Route playback to any specific output speaker, Bluetooth headphones, AirPods, or external display by **Device ID** or name:
 
 ```bash
-# Target specific audio device by name or substring
-koko -d "AirPods" "Speech routed to Bluetooth headphones."
-koko -d "MacBook Pro Speakers" "Speech routed to built-in speakers."
-koko -d "DELL" "Speech routed to external monitor audio."
-
-# List all available audio output devices
+# List active macOS audio output device IDs
 koko --list-devices
+
+# Route speech using Device ID
+koko -d 74 "Speech routed to device ID 74 (MacBook Pro Speakers)."
+koko -d 86 "Speech routed to device ID 86 (External Monitor)."
+
+# Or by device name substring
+koko -d "AirPods" "Speech routed to Bluetooth headphones."
 ```
 
 ---
@@ -135,7 +137,7 @@ koko service uninstall
 | **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net Latency | 0.10s |
 | **Voice Quality** | ⭐⭐⭐⭐⭐ (Studio Neural) | ⭐⭐⭐ (Robotic) | ⭐⭐⭐ (Muffled) | ⭐⭐⭐⭐⭐ (Studio) | ⭐⭐ (Legacy) |
 | **System Audio Focus (`-f`)** | ✅ **Yes (<1ms HAL)** | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Device Selection (`-d`)** | ✅ **Native CoreAudio** | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Device Selection (`-d`)** | ✅ **Native CoreAudio ID** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Zero Python Dependencies** | ✅ **100% Native** | ❌ Requires Python | ❌ Needs wrapper | ❌ Requires Python | ✅ Native |
 | **Licensing** | **MIT License** | ⚠️ GPL-3.0 | MIT License | 💳 Paid Subscription | Closed / Native |
 
@@ -235,7 +237,7 @@ koko -o output.wav --no-play "Saving audio output directly to file."
 
 - **Zero Python Dependencies**: 100% compiled standalone Go binary with native C++ SIMD inference (`sherpa-onnx`). No virtual environments, PyTorch, or Hugging Face Hub runtime needed.
 - **Model Backbone**: **Kokoro-82M** (StyleTTS 2 architecture) exported to ONNX (~345MB).
-- **CoreAudio HAL**: Direct Cgo linking against Apple's `-framework CoreAudio` for hardware-level volume scalar manipulation and audio output device targeting.
+- **CoreAudio HAL**: Direct Cgo linking against Apple's `-framework CoreAudio` for hardware-level volume scalar manipulation and audio output device targeting by Device ID.
 - **Auto-Setup**: Missing model files are self-provisioned automatically on turn 1.
 
 ---
