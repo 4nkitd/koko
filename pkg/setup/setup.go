@@ -23,9 +23,10 @@ func EnsureInstalled(verbose bool) error {
 	}
 
 	binPath := filepath.Join(homeDir, ".local", "bin", "sherpa-onnx-offline-tts")
+	binPathPlay := filepath.Join(homeDir, ".local", "bin", "sherpa-onnx-offline-tts-play")
 	modelDir := filepath.Join(homeDir, ".config", "koko", "onnx", "kokoro-en-v0_19")
 
-	binExists := fileExists(binPath)
+	binExists := fileExists(binPath) && fileExists(binPathPlay)
 	modelExists := fileExists(filepath.Join(modelDir, "model.onnx"))
 
 	if binExists && modelExists {
@@ -76,24 +77,24 @@ func installSherpaBinary(homeDir string, verbose bool) error {
 		return err
 	}
 
-	var foundBin string
-	_ = filepath.Walk(tmpExtract, func(path string, info os.FileInfo, err error) error {
-		if err == nil && !info.IsDir() && info.Name() == "sherpa-onnx-offline-tts" {
-			foundBin = path
+	binsToCopy := []string{"sherpa-onnx-offline-tts", "sherpa-onnx-offline-tts-play"}
+	for _, binName := range binsToCopy {
+		var foundBin string
+		_ = filepath.Walk(tmpExtract, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && info.Name() == binName {
+				foundBin = path
+			}
+			return nil
+		})
+
+		if foundBin != "" {
+			destBin := filepath.Join(binDestDir, binName)
+			_ = copyFile(foundBin, destBin)
+			_ = os.Chmod(destBin, 0755)
 		}
-		return nil
-	})
-
-	if foundBin == "" {
-		return fmt.Errorf("sherpa-onnx-offline-tts binary not found in archive")
 	}
 
-	destBin := filepath.Join(binDestDir, "sherpa-onnx-offline-tts")
-	if err := copyFile(foundBin, destBin); err != nil {
-		return err
-	}
-
-	return os.Chmod(destBin, 0755)
+	return nil
 }
 
 func installKokoroModel(homeDir string, verbose bool) error {

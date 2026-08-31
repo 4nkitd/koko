@@ -20,6 +20,7 @@ type SynthesizeOptions struct {
 	Speed   float64
 	OutPath string
 	Model   string
+	Stream  bool
 	Verbose bool
 }
 
@@ -83,7 +84,7 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 	tokensPath := filepath.Join(modelDir, "tokens.txt")
 	dataDir := filepath.Join(modelDir, "espeak-ng-data")
 
-	executable, errLoc := locateSherpaBinary()
+	executable, errLoc := locateSherpaBinary(opts.Stream)
 	_, errStat := os.Stat(modelPath)
 
 	if errLoc != nil || errStat != nil {
@@ -110,21 +111,32 @@ func (e *Engine) Synthesize(opts SynthesizeOptions) (string, error) {
 		"--kokoro-tokens=" + tokensPath,
 		"--kokoro-data-dir=" + dataDir,
 		"--sid=" + strconv.Itoa(sid),
-		"--output-filename=" + targetWav,
-		opts.Text,
 	}
+
+	if !opts.Stream {
+		args = append(args, "--output-filename="+targetWav)
+	}
+
+	args = append(args, opts.Text)
 
 	cmd := exec.Command(executable, args...)
 	cmd.Env = os.Environ()
 
-	if opts.Verbose {
+	if opts.Verbose || opts.Stream {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
 
 	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "⚠️  Warning: Native C++ TTS execution error: %v. Falling back to macOS speech engine.\n", err)
-		return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
+		if !opts.Stream {
+			fmt.Fprintf(os.Stderr, "⚠️  Warning: Native C++ TTS execution error: %v. Falling back to macOS speech engine.\n", err)
+			return e.fallbackSay(opts.Text, voiceName, opts.OutPath)
+		}
+		return "", err
+	}
+
+	if opts.Stream {
+		return "", nil
 	}
 
 	if _, err := os.Stat(targetWav); err != nil {
@@ -160,12 +172,17 @@ func (e *Engine) fallbackSay(text, voiceName, outPath string) (string, error) {
 	return targetAudio, nil
 }
 
-func locateSherpaBinary() (string, error) {
+func locateSherpaBinary(stream bool) (string, error) {
 	homeDir, _ := os.UserHomeDir()
+	binName := "sherpa-onnx-offline-tts"
+	if stream {
+		binName = "sherpa-onnx-offline-tts-play"
+	}
+
 	candidates := []string{
-		"sherpa-onnx-offline-tts",
-		filepath.Join(homeDir, ".local", "bin", "sherpa-onnx-offline-tts"),
-		"/usr/local/bin/sherpa-onnx-offline-tts",
+		binName,
+		filepath.Join(homeDir, ".local", "bin", binName),
+		filepath.Join("/usr/local/bin", binName),
 	}
 
 	for _, cand := range candidates {
@@ -177,5 +194,5 @@ func locateSherpaBinary() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("sherpa-onnx-offline-tts executable not found")
+	return "", fmt.Errorf("%s executable not found", binName)
 }

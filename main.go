@@ -38,6 +38,8 @@ func main() {
 	focusFlag := flag.Bool("focus", false, "Enable Audio Focus (ducks background audio system-wide)")
 	flag.BoolVar(focusFlag, "f", false, "Enable Audio Focus (shorthand)")
 
+	streamFlag := flag.Bool("stream", false, "Enable direct CoreAudio streaming mode for sub-50ms latency")
+
 	portFlag := flag.Int("port", 8848, "Port for koko OpenAI-compatible REST HTTP server")
 
 	noPlayFlag := flag.Bool("no-play", false, "Disable automatic audio playback")
@@ -60,6 +62,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  koko setup                  Initialize ONNX models and runtime\n\n")
 		fmt.Fprintf(os.Stderr, "Examples:\n")
 		fmt.Fprintf(os.Stderr, "  koko \"I am Iron Man.\"\n")
+		fmt.Fprintf(os.Stderr, "  koko --stream \"Sub-50ms instant streaming speech synthesis.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --ironman \"Sometimes you gotta run before you can walk.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --friday \"F.R.I.D.A.Y. online.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --jarvis \"Allow me to introduce myself. I am J.A.R.V.I.S.\"\n")
@@ -178,25 +181,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	daemonReq := daemon.Request{
-		Text:    text,
-		Voice:   selectedVoice,
-		Speed:   *speedFlag,
-		OutPath: *outFlag,
-		Focus:   *focusFlag,
-		NoPlay:  *noPlayFlag,
-	}
+	// Try sub-30ms daemon IPC execution if running (unless --stream is passed)
+	if !*streamFlag {
+		daemonReq := daemon.Request{
+			Text:    text,
+			Voice:   selectedVoice,
+			Speed:   *speedFlag,
+			OutPath: *outFlag,
+			Focus:   *focusFlag,
+			NoPlay:  *noPlayFlag,
+		}
 
-	handledByDaemon, wavPath, daemonErr := daemon.TrySendDaemon(daemonReq)
-	if handledByDaemon {
-		if daemonErr != nil {
-			fmt.Fprintf(os.Stderr, "Daemon execution error: %v\n", daemonErr)
-			os.Exit(1)
+		handledByDaemon, wavPath, daemonErr := daemon.TrySendDaemon(daemonReq)
+		if handledByDaemon {
+			if daemonErr != nil {
+				fmt.Fprintf(os.Stderr, "Daemon execution error: %v\n", daemonErr)
+				os.Exit(1)
+			}
+			if *outFlag != "" {
+				fmt.Printf("Saved audio to: %s\n", wavPath)
+			}
+			os.Exit(0)
 		}
-		if *outFlag != "" {
-			fmt.Printf("Saved audio to: %s\n", wavPath)
-		}
-		os.Exit(0)
 	}
 
 	_ = setup.EnsureInstalled(*verboseFlag)
@@ -206,6 +212,7 @@ func main() {
 		Voice:   selectedVoice,
 		Speed:   *speedFlag,
 		OutPath: *outFlag,
+		Stream:  *streamFlag,
 		Verbose: *verboseFlag,
 	}
 
@@ -216,17 +223,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	shouldPlay := !*noPlayFlag
-	if shouldPlay {
-		player := audio.NewPlayer()
-		if err := player.Play(wavFile, *focusFlag); err != nil {
-			fmt.Fprintf(os.Stderr, "Audio playback error: %v\n", err)
+	if !*streamFlag {
+		shouldPlay := !*noPlayFlag
+		if shouldPlay {
+			player := audio.NewPlayer()
+			if err := player.Play(wavFile, *focusFlag); err != nil {
+				fmt.Fprintf(os.Stderr, "Audio playback error: %v\n", err)
+			}
 		}
-	}
 
-	if *outFlag == "" {
-		audio.Cleanup(wavFile)
-	} else {
-		fmt.Printf("Saved audio to: %s\n", wavFile)
+		if *outFlag == "" {
+			audio.Cleanup(wavFile)
+		} else {
+			fmt.Printf("Saved audio to: %s\n", wavFile)
+		}
 	}
 }
