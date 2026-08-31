@@ -2,7 +2,7 @@
 
 # 🗣️ koko
 
-### Fast, standalone, zero-dependency Text-to-Speech CLI for macOS.
+### Fast, standalone, zero-dependency Text-to-Speech CLI & Server for macOS.
 
 [![Release](https://img.shields.io/github/v/release/4nkitd/koko?color=00ADD8&style=flat-square)](https://github.com/4nkitd/koko/releases)
 [![Homebrew](https://img.shields.io/badge/homebrew-4nkitd%2Ftap%2Fkoko-orange?style=flat-square)](https://github.com/4nkitd/homebrew-tap)
@@ -10,7 +10,7 @@
 
 Get up and running with high-speed neural text-to-speech on your Mac in seconds.
 
-[Quickstart](#quickstart) • [Character Voices](#character-voices) • [Benchmarks](#-performance-benchmarks) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Agent Integration](#-ai-agent-integration-llmstxt)
+[Quickstart](#quickstart) • [REST Server](#-openai-compatible-rest-server-http-v1audiospeech) • [Character Voices](#character-voices) • [Benchmarks](#-performance-benchmarks) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Integration](#-ai-agent-integration-llmstxt)
 
 ---
 
@@ -34,6 +34,39 @@ go install github.com/4nkitd/koko@latest
 
 ```bash
 koko "Sometimes you gotta run before you can walk."
+```
+
+---
+
+## 🔌 OpenAI-Compatible REST Server (`http://v1/audio/speech`)
+
+Launch `koko` as a local OpenAI-compatible HTTP REST server:
+
+```bash
+koko server --port 8848
+```
+
+Any app, web frontend, VS Code extension, or script designed for OpenAI TTS can stream audio locally with zero code changes:
+
+```bash
+curl -X POST http://localhost:8848/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{"input": "OpenAI API compatibility test passed.", "voice": "ironman"}' \
+  --output response.wav
+```
+
+---
+
+## 🚦 macOS Auto-Starting Service (`koko service install`)
+
+Automatically register `koko daemon` as a native macOS LaunchAgent service so it stays pre-warmed on system login:
+
+```bash
+# Install & load LaunchAgent service
+koko service install
+
+# Uninstall service
+koko service uninstall
 ```
 
 ---

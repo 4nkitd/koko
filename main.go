@@ -12,11 +12,13 @@ import (
 	"github.com/4nkitd/koko/pkg/config"
 	"github.com/4nkitd/koko/pkg/daemon"
 	"github.com/4nkitd/koko/pkg/engine"
+	"github.com/4nkitd/koko/pkg/server"
+	"github.com/4nkitd/koko/pkg/service"
 	"github.com/4nkitd/koko/pkg/setup"
 	"github.com/4nkitd/koko/pkg/voices"
 )
 
-const version = "0.0.1"
+const version = "0.1.0"
 
 func main() {
 	voiceFlag := flag.String("voice", "", "Character voice: 'ironman', 'friday', 'jarvis', etc.")
@@ -36,6 +38,8 @@ func main() {
 	focusFlag := flag.Bool("focus", false, "Enable Audio Focus (ducks background audio system-wide)")
 	flag.BoolVar(focusFlag, "f", false, "Enable Audio Focus (shorthand)")
 
+	portFlag := flag.Int("port", 8848, "Port for koko OpenAI-compatible REST HTTP server")
+
 	noPlayFlag := flag.Bool("no-play", false, "Disable automatic audio playback")
 	daemonFlag := flag.Bool("daemon", false, "Start background daemon server for sub-30ms IPC execution")
 	listVoicesFlag := flag.Bool("list-voices", false, "List available character voices")
@@ -46,17 +50,21 @@ func main() {
 	versionFlag := flag.Bool("version", false, "Show koko CLI version")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: koko [options] [text]\n\n")
-		fmt.Fprintf(os.Stderr, "High-Performance Standalone Text-To-Speech CLI for macOS (Zero Python Dependencies).\n\n")
+		fmt.Fprintf(os.Stderr, "Usage: koko [options] [text|command]\n\n")
+		fmt.Fprintf(os.Stderr, "High-Performance Standalone Text-To-Speech CLI & Server for macOS.\n\n")
+		fmt.Fprintf(os.Stderr, "Commands:\n")
+		fmt.Fprintf(os.Stderr, "  koko server [--port 8848]   Start OpenAI-compatible HTTP REST server\n")
+		fmt.Fprintf(os.Stderr, "  koko service install        Install background macOS LaunchAgent service\n")
+		fmt.Fprintf(os.Stderr, "  koko service uninstall      Uninstall background macOS LaunchAgent service\n")
+		fmt.Fprintf(os.Stderr, "  koko daemon                 Start background Unix socket daemon\n")
+		fmt.Fprintf(os.Stderr, "  koko setup                  Initialize ONNX models and runtime\n\n")
 		fmt.Fprintf(os.Stderr, "Examples:\n")
 		fmt.Fprintf(os.Stderr, "  koko \"I am Iron Man.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --ironman \"Sometimes you gotta run before you can walk.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --friday \"F.R.I.D.A.Y. online.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko --jarvis \"Allow me to introduce myself. I am J.A.R.V.I.S.\"\n")
 		fmt.Fprintf(os.Stderr, "  koko -f \"Priority notification. Background audio ducked.\"\n")
-		fmt.Fprintf(os.Stderr, "  echo \"Status check nominal.\" | koko\n")
-		fmt.Fprintf(os.Stderr, "  koko daemon\n")
-		fmt.Fprintf(os.Stderr, "  koko setup\n\n")
+		fmt.Fprintf(os.Stderr, "  echo \"Status check nominal.\" | koko\n\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
 	}
@@ -83,6 +91,29 @@ func main() {
 			if err := daemon.StartDaemon(cfg); err != nil {
 				fmt.Fprintf(os.Stderr, "Daemon error: %v\n", err)
 				os.Exit(1)
+			}
+			os.Exit(0)
+		case "server":
+			if err := setup.EnsureInstalled(*verboseFlag); err != nil {
+				fmt.Fprintf(os.Stderr, "Initialization error: %v\n", err)
+				os.Exit(1)
+			}
+			if err := server.StartServer(cfg, *portFlag); err != nil {
+				fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		case "service":
+			if len(args) > 1 && args[1] == "uninstall" {
+				if err := service.UninstallService(); err != nil {
+					fmt.Fprintf(os.Stderr, "Service uninstall error: %v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				if err := service.InstallService(); err != nil {
+					fmt.Fprintf(os.Stderr, "Service install error: %v\n", err)
+					os.Exit(1)
+				}
 			}
 			os.Exit(0)
 		}
