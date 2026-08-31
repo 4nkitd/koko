@@ -1,92 +1,130 @@
-# `koko` — High-Performance Standalone Text-To-Speech CLI
+<div align="center">
 
-[![Release](https://img.shields.io/badge/release-v0.0.1-blue.svg)](https://github.com/4nkitd/koko/releases)
-[![Go Version](https://img.shields.io/badge/go-1.27+-00ADD8.svg)](https://golang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+# 🗣️ koko
 
-`koko` is a lightweight, zero-dependency command-line Text-To-Speech tool for macOS. Powered natively by the C++ ONNX engine (`sherpa-onnx`) and the **Kokoro-82M** model, it delivers sub-second speech synthesis (**~0.4s**) without embedding Python, heavy virtual environments, or external API servers.
+### Fast, standalone, zero-dependency Text-to-Speech CLI for macOS.
 
----
+[![Release](https://img.shields.io/github/v/release/4nkitd/koko?color=00ADD8&style=flat-square)](https://github.com/4nkitd/koko/releases)
+[![Homebrew](https://img.shields.io/badge/homebrew-4nkitd%2Ftap%2Fkoko-orange?style=flat-square)](https://github.com/4nkitd/homebrew-tap)
+[![License: MIT](https://img.shields.io/github/license/4nkitd/koko?style=flat-square)](LICENSE)
 
-## ✨ Key Features
+Get up and running with high-speed neural text-to-speech on your Mac in seconds.
 
-- **🦾 Iron Man Default Voice**: Default character voice set to Iron Man (`am_michael`).
-- **⚡ Sub-Second & Sub-30ms Daemon**: Sub-second C++ ONNX execution, plus optional background daemon server (`koko daemon`) for **<30ms instant IPC response time**.
-- **📦 Zero Python Dependencies**: 100% independent Go binary build. No Python, PyTorch, or Hugging Face Hub runtime needed.
-- **🛡️ Fallback Warning Protection**: Automatic fallback to macOS native speech engine (`say`) with a clear user warning if ONNX models are offline/unavailable.
-- **🎯 System-Wide Audio Focus (`-f` / `--focus`)**: Ducks system-wide background audio (`<1ms` CoreAudio HAL) during speech playback, then automatically restores original volume levels.
-- **🎙️ Shorthand Character Flags**:
-  - `--ironman` / `--stark`: Iron Man character voice *(Default)*
-  - `--friday`: F.R.I.D.A.Y. tactical AI assistant voice
-  - `--jarvis`: J.A.R.V.I.S. AI assistant voice (Paul Bettany style)
-- **🍺 Homebrew Tap Support**: One-command installation via `brew install 4nkitd/tap/koko`.
+[Quickstart](#quickstart) • [Character Voices](#character-voices) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [Documentation](#technical-architecture)
 
 ---
 
-## 🚀 Quick Start & Installation
+</div>
 
-### Option 1: Install via Homebrew Tap
+## Quickstart
+
+### Install via Homebrew (Recommended)
+
 ```bash
 brew install 4nkitd/tap/koko
 ```
 
-### Option 2: Install via Go
+### Install via Go
+
 ```bash
-go install github.com/4nkitd/koko@v0.0.1
+go install github.com/4nkitd/koko@latest
 ```
 
-### Option 3: Build from Source
+### Run your first command
+
 ```bash
-git clone https://github.com/4nkitd/koko.git
-cd koko
-make install
+koko "Sometimes you gotta run before you can walk."
 ```
 
 ---
 
-## 💻 Usage
+## Character Voices
+
+`koko` comes built-in with instant character flags modeled after iconic AI assistants and characters:
 
 ```bash
-# Speak text using default voice (Iron Man)
-koko "Sometimes you gotta run before you can walk."
-
-# Shorthand character flags
 koko --ironman "I am Iron Man."
-koko --friday "F.R.I.D.A.Y. online."
-koko --jarvis "Allow me to introduce myself. I am J.A.R.V.I.S."
+koko --friday  "F.R.I.D.A.Y. online and operational."
+koko --jarvis  "Allow me to introduce myself. I am J.A.R.V.I.S."
+```
 
-# Speak text with Audio Focus enabled (ducks background audio system-wide)
-koko -f "Priority notification. Background audio ducked."
+| Flag | Voice Preset | Gender | Accent / Style |
+| :--- | :--- | :--- | :--- |
+| `--ironman` / `--stark` | Tony Stark *(Default)* | Male | American English |
+| `--friday` | F.R.I.D.A.Y. | Female | British / Irish English |
+| `--jarvis` | J.A.R.V.I.S. | Male | British English |
+| `-v am_michael` | Michael | Male | American English |
+| `-v am_adam` | Adam | Male | Deep American English |
+| `-v bf_emma` | Emma | Female | British English |
+| `-v bm_george` | George | Male | British English |
 
-# Piped text from standard input
-echo "Status check nominal." | koko
+List all available voices at any time:
 
-# Launch sub-30ms IPC daemon server
-koko daemon
-
-# Save speech directly to WAV file without playing
-koko -o response.wav --no-play "Saving audio output directly to file."
-
-# List all available character voices
+```bash
 koko --list-voices
 ```
 
 ---
 
-## 🛠️ Character Voice Reference
+## Audio Focus (`-f` / `--focus`)
 
-| Character Flag | Gender | Language | Description |
-| :--- | :--- | :--- | :--- |
-| `--ironman` | Male | American English | Iron Man / Tony Stark voice *(Default)* |
-| `--friday` | Female | British/Irish English | F.R.I.D.A.Y. AI assistant |
-| `--jarvis` | Male | British English | J.A.R.V.I.S. AI assistant |
-| `-v am_michael` | Male | American English | Clear American male voice |
-| `-v am_adam` | Male | American English | Deep American male voice |
-| `-v bf_emma` | Female | British English | Classic British female voice |
-| `-v bm_george` | Male | British English | Distinguished British male voice |
+Ducks background audio (music, YouTube, video games, browser tabs, media players) system-wide using native macOS CoreAudio HAL APIs in **<1ms**, speaks your text loudly and clearly, then automatically restores your original volume levels.
+
+```bash
+koko -f "Priority notification. All background audio ducked."
+```
+
+> **How it works**: Unlike fragile script-based implementations, `koko` uses zero application-specific hacks. It operates directly at the macOS CoreAudio hardware layer (`AudioObjectSetPropertyData`), attenuating all active audio outputs across the entire OS during speech playback.
 
 ---
 
-## 📄 License
+## Daemon Mode (`< 30ms` IPC Execution)
+
+For voice agents, terminal scripts, or IDE extensions requiring ultra-low latency playback, launch `koko` in background daemon mode:
+
+```bash
+# Start background daemon server
+koko daemon
+```
+
+When daemon mode is running, `koko` keeps model weights pre-warmed in memory and routes commands over a local Unix domain socket (`/tmp/koko_daemon.sock`).
+
+```bash
+# Executed via IPC in under 30ms
+koko "Sub 30ms instant response."
+```
+
+---
+
+## Terminal Piping & Scripting
+
+Pipe standard input directly into `koko` from any shell command, log parser, or AI pipeline:
+
+```bash
+echo "Build succeeded in 4.2 seconds." | koko
+```
+
+```bash
+git push 2>&1 | tail -n 1 | koko --friday
+```
+
+Save generated speech to a `.wav` file without playing:
+
+```bash
+koko -o output.wav --no-play "Saving audio output directly to file."
+```
+
+---
+
+## Technical Architecture
+
+- **Zero Python Dependencies**: 100% compiled standalone Go binary with native C++ SIMD inference (`sherpa-onnx`). No virtual environments, PyTorch, or Hugging Face Hub runtime needed.
+- **Model Backbone**: **Kokoro-82M** (StyleTTS 2 architecture) exported to ONNX (~345MB).
+- **CoreAudio HAL**: Direct Cgo linking against Apple's `-framework CoreAudio` for hardware-level volume scalar manipulation.
+- **Auto-Setup**: Missing model files are self-provisioned automatically on turn 1.
+
+---
+
+## License
 
 [MIT License](LICENSE) © 2026 Ankit Yadav
