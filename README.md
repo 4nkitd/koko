@@ -38,6 +38,20 @@ koko "Sometimes you gotta run before you can walk."
 
 ---
 
+## ⚡ Sub-50ms Streaming Audio (`--stream`)
+
+Stream PCM audio chunks directly to hardware speakers *while* tokens are being generated for **almost instant** time-to-first-sound:
+
+```bash
+koko --stream "Sub-50ms instant streaming speech synthesis."
+```
+
+```bash
+koko --friday --stream "F.R.I.D.A.Y. streaming audio active."
+```
+
+---
+
 ## 🎧 Audio Device Routing (`-d` / `--device`)
 
 Route playback to any specific output speaker, Bluetooth headphones, AirPods, or external display by **Device ID** or name:
@@ -52,20 +66,6 @@ koko -d 86 "Speech routed to device ID 86 (External Monitor)."
 
 # Or by device name substring
 koko -d "AirPods" "Speech routed to Bluetooth headphones."
-```
-
----
-
-## ⚡ Sub-50ms Streaming Audio (`--stream`)
-
-Stream PCM audio chunks directly to hardware speakers *while* tokens are being generated for **almost instant** time-to-first-sound:
-
-```bash
-koko --stream "Sub-50ms instant streaming speech synthesis."
-```
-
-```bash
-koko --friday --stream "F.R.I.D.A.Y. streaming audio active."
 ```
 
 ---
@@ -118,7 +118,7 @@ koko service uninstall
 
 ### 💻 Hardware Resource Usage
 
-| Metric / Hardware Resource | PyTorch / Python (`mlx_audio`) | `koko` CLI (Native C++ ONNX) | Improvement Factor |
+| Metric / Hardware Resource | PyTorch / Python (`mlx_audio`) | `koko` (Native C++ ONNX) | Improvement Factor |
 | :--- | :--- | :--- | :--- |
 | ⏱️ **Wall Clock Execution Time** | **`2.66 s`** | **`0.70 s`** *(Stream: `<50ms`)* | **3.8x Faster** |
 | 💻 **CPU Cycles Elapsed** | **`14.8 Billion`** | **`15.6 Million`** | **948x Fewer Cycles** |
@@ -129,17 +129,17 @@ koko service uninstall
 
 ---
 
-## 🔍 Open Source Tool Comparison
+## 🔍 Tool Comparison
 
-| Feature / Metric | 🗣️ `koko` (Ours) | 🥧 Piper TTS | 📻 Pocket TTS | ☁️ ElevenLabs CLI | 🍎 macOS `say` |
+| Feature / Metric | 🗣️ `koko` | 🥧 Piper TTS | 📻 Pocket TTS | ☁️ ElevenLabs | 🍎 macOS `say` |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Engine / Architecture** | **Kokoro-82M C++ ONNX** | VITS + ONNX | Flow-matching | Cloud REST API | Legacy Synthesizer |
-| **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net Latency | 0.10s |
+| **Engine Architecture** | **Kokoro-82M C++ ONNX** | VITS + ONNX | Flow-matching | Cloud API | Legacy Synthesizer |
+| **Execution Latency** | **`<50ms Stream` / `0.70s`** | ~1.20s | ~0.60s | 300ms + Net | 0.10s |
 | **Voice Quality** | ⭐⭐⭐⭐⭐ (Studio Neural) | ⭐⭐⭐ (Robotic) | ⭐⭐⭐ (Muffled) | ⭐⭐⭐⭐⭐ (Studio) | ⭐⭐ (Legacy) |
 | **System Audio Focus (`-f`)** | ✅ **Yes (<1ms HAL)** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Device Selection (`-d`)** | ✅ **Native CoreAudio ID** | ❌ No | ❌ No | ❌ No | ❌ No |
 | **Zero Python Dependencies** | ✅ **100% Native** | ❌ Requires Python | ❌ Needs wrapper | ❌ Requires Python | ✅ Native |
-| **Licensing** | **MIT License** | ⚠️ GPL-3.0 | MIT License | 💳 Paid Subscription | Closed / Native |
+| **License** | **MIT License** | ⚠️ GPL-3.0 | MIT License | 💳 Paid | Closed / Native |
 
 ---
 
