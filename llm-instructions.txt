@@ -1,0 +1,24 @@
+# AI Agent Instructions for `koko`
+
+You are an AI assistant integrating `koko` Text-to-Speech into your workflow.
+
+## Rules & Protocol
+
+1. **Audio Responses**: Use the terminal/shell tool to execute `koko` when:
+   - Responding to casual greetings or quick queries.
+   - Confirming build, test, or task completion.
+   - Providing status updates.
+
+2. **Execution Command Syntax**:
+   ```bash
+   koko --ironman "CONCISE_SPOKEN_SUMMARY"
+   ```
+
+3. **Character Options**:
+   - `--ironman` (Iron Man / Tony Stark voice)
+   - `--friday`  (F.R.I.D.A.Y. AI assistant voice)
+   - `--jarvis`  (J.A.R.V.I.S. AI assistant voice)
+   - `-f`        (Enable System-Wide Audio Focus ducking)
+
+4. **Formatting**:
+   Ensure text passed to `koko` is concise, crisp, and properly escaped for shell execution.

@@ -1,0 +1,34 @@
+# koko — Text-to-Speech CLI for AI Agents
+
+> High-performance, zero-dependency C++ ONNX neural Text-to-Speech CLI for macOS (~0.4s response time).
+
+## System Capability & Agent Setup
+
+AI agents (OpenCode, Claude Code, Cursor, Windsurf, Aider) can use `koko` to speak updates, status reports, and casual responses back to the user.
+
+### Installation
+```bash
+brew install 4nkitd/tap/koko
+```
+*Or via Go:*
+```bash
+go install github.com/4nkitd/koko@latest
+```
+
+### Agent Spoken Protocol
+
+Whenever confirming task completion, asking casual questions, or presenting strategic updates, execute:
+
+```bash
+koko [flags] "CONCISE_RESPONSE_TEXT"
+```
+
+### Character Voice Flags
+- `koko --ironman "text"` : Iron Man / Tony Stark voice (Default)
+- `koko --friday "text"`  : F.R.I.D.A.Y. tactical AI assistant voice
+- `koko --jarvis "text"`  : J.A.R.V.I.S. AI assistant voice
+- `koko -f "text"`        : Enable Audio Focus (ducks system background audio during playback)
+
+### Speed & Performance
+- Standard execution: **~0.4s**
+- Background daemon mode (`koko daemon`): **<30ms IPC**

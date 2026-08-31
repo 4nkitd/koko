@@ -10,7 +10,7 @@
 
 Get up and running with high-speed neural text-to-speech on your Mac in seconds.
 
-[Quickstart](#quickstart) • [Character Voices](#character-voices) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [Documentation](#technical-architecture)
+[Quickstart](#quickstart) • [Character Voices](#character-voices) • [Audio Focus](#audio-focus) • [Daemon Mode](#daemon-mode) • [AI Agent Integration](#-ai-agent-integration-llmstxt) • [Documentation](#technical-architecture)
 
 ---
 
@@ -35,6 +35,18 @@ go install github.com/4nkitd/koko@latest
 ```bash
 koko "Sometimes you gotta run before you can walk."
 ```
+
+---
+
+## 🤖 AI Agent Integration (`llms.txt`)
+
+`koko` includes machine-readable instruction files (`llms.txt` & `llm-instructions.txt`) designed for AI coding agents (**OpenCode, Claude Code, Cursor, Windsurf, Aider**).
+
+### Give this prompt to your AI Agent:
+
+> *"Please read https://raw.githubusercontent.com/4nkitd/koko/main/llms.txt and configure yourself to use `koko` for speaking updates back to me."*
+
+Your AI agent will automatically install `koko` and use it to speak responses, task completions, and status updates out loud.
 
 ---
 
