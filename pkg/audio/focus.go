@@ -1,3 +1,5 @@
+//go:build darwin && cgo
+
 package audio
 
 /*
@@ -98,7 +100,6 @@ func (fm *FocusManager) ApplyFocus() {
 	vol := float32(C.get_master_volume())
 	if vol >= 0 {
 		fm.origVolume = vol
-		// Duck system-wide master output volume to 25%
 		C.set_master_volume(C.float(0.25))
 		fm.isFocused = true
 	}

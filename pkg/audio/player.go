@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"syscall"
 )
 
@@ -21,14 +22,34 @@ func (p *Player) Play(filePath string, useFocus bool) error {
 		defer focusMgr.Restore()
 	}
 
-	args := []string{}
-	if useFocus {
-		// Boost TTS playback gain so speech is crisp over ducked background audio
-		args = append(args, "-v", "2.5")
-	}
-	args = append(args, filePath)
+	var cmd *exec.Cmd
 
-	cmd := exec.Command("afplay", args...)
+	switch runtime.GOOS {
+	case "darwin":
+		args := []string{}
+		if useFocus {
+			args = append(args, "-v", "2.5")
+		}
+		args = append(args, filePath)
+		cmd = exec.Command("afplay", args...)
+	case "windows":
+		psCmd := fmt.Sprintf("(New-Object Media.SoundPlayer '%s').PlaySync()", filePath)
+		cmd = exec.Command("powershell", "-c", psCmd)
+	default:
+		// Linux fallback order: paplay -> aplay -> ffplay -> mpv
+		if path, err := exec.LookPath("paplay"); err == nil {
+			cmd = exec.Command(path, filePath)
+		} else if path, err := exec.LookPath("aplay"); err == nil {
+			cmd = exec.Command(path, filePath)
+		} else if path, err := exec.LookPath("ffplay"); err == nil {
+			cmd = exec.Command(path, "-nodisp", "-autoexit", filePath)
+		} else if path, err := exec.LookPath("mpv"); err == nil {
+			cmd = exec.Command(path, "--no-video", filePath)
+		} else {
+			return fmt.Errorf("no audio player found (install paplay, aplay, or ffplay)")
+		}
+	}
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
